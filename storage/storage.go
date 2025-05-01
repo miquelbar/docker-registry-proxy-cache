@@ -6,9 +6,8 @@ import (
 )
 
 type BlobStorage interface {
-	SaveBlob(ctx context.Context, key string, data io.Reader) error
-	LoadBlob(ctx context.Context, name, reference string) (io.ReadCloser, error)
-	LoadManifest(name, reference string) ([]byte, error)
-	StoreManifest(name, reference string, manifest []byte) error
-	GetManifestPath(name, reference string) string
+	SaveBlob(ctx context.Context, fullPath string, data io.Reader) error
+	LoadBlob(ctx context.Context, imageRef, name, reference string) (io.ReadCloser, error)
+	LoadManifest(imageRef, name, reference string) ([]byte, error)
+	StoreManifest(imageRef, name, reference string, manifest []byte) error
 }

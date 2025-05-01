@@ -19,6 +19,7 @@ func V2RootHandler(c *gin.Context) {
 
 func V2Handler(store storage.BlobStorage) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		imageRef := c.Param("imageref")
 		name := c.Param("name")
 		fullPath := c.Param("fullpath")
 		method := c.Request.Method
@@ -37,9 +38,9 @@ func V2Handler(store storage.BlobStorage) gin.HandlerFunc {
 		case "manifests":
 			h := v2_manifest.NewManifestHandler(store)
 			if method == "HEAD" {
-				h.V2HeadManifests(c, repo, reference)
+				h.V2HeadManifests(c, imageRef, repo, reference)
 			} else if method == "GET" {
-				h.V2GetManifest(c, repo, reference)
+				h.V2GetManifest(c, imageRef, repo, reference)
 			} else {
 				c.JSON(400, gin.H{"error": "unsupported method"})
 			}
@@ -47,7 +48,7 @@ func V2Handler(store storage.BlobStorage) gin.HandlerFunc {
 		case "blobs":
 			h := v2_blobs.NewManifestHandler(store)
 			if method == "GET" {
-				h.V2GetBlob(c, repo, reference)
+				h.V2GetBlob(c, imageRef, repo, reference)
 			} else {
 				c.JSON(400, gin.H{"error": "unsupported method"})
 			}
@@ -62,5 +63,5 @@ func RegisterV2Routes(r *gin.RouterGroup, store storage.BlobStorage) {
 
 	// v2Manifests.RegisterV2ManifestRoutes(r, store)
 	// v2blobs.RegisterV2ManifestRoutes(r, store)
-	r.Any("").GET("/:name/*fullpath", V2Handler(store))
+	r.Any("").GET("/:imageref/:name/*fullpath", V2Handler(store))
 }

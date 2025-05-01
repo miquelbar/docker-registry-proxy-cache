@@ -16,8 +16,8 @@ func NewManifestHandler(store storage.BlobStorage) *Handler {
 	return &Handler{Storage: store}
 }
 
-func (h *Handler) V2GetBlob(c *gin.Context, repo, reference string) {
-	blob, err := h.Storage.LoadBlob(c, repo, reference)
+func (h *Handler) V2GetBlob(c *gin.Context, imageRef, repo, reference string) {
+	blob, err := h.Storage.LoadBlob(c, imageRef, repo, reference)
 	if err != nil {
 		c.JSON(404, gin.H{"message": "blob not found", "error": err.Error()})
 		return

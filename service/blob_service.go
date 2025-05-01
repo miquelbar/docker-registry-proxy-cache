@@ -2,8 +2,8 @@ package service
 
 import "io"
 
-func DownloadBlob(repo, reference string) (io.ReadCloser, error) {
-	registryClient, err := GetRegistryClient(repo)
+func DownloadBlob(imageRef, repo, reference string) (io.ReadCloser, error) {
+	registryClient, err := GetRegistryClient(imageRef)
 
 	if err != nil {
 		return nil, err

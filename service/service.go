@@ -3,15 +3,16 @@ package service
 import (
 	"docker-registry-proxy-cache/client"
 	"fmt"
-	"strings"
 )
 
-func GetRegistryClient(repo string) (client.RegistryClient, error) {
+func GetRegistryClient(imageRef string) (client.RegistryClient, error) {
 	// select registry from repo name prefix
 	switch {
-	case strings.HasPrefix(repo, "docker.io"), !strings.Contains(repo, "."):
+	case imageRef == "docker":
 		return client.NewDockerClient(), nil
+	case imageRef == "gcr.io":
+		return client.NewGCRIOClient(), nil
 	default:
-		return nil, fmt.Errorf("unsupported registry for repo: %s", repo)
+		return nil, fmt.Errorf("unsupported registry for image reference: %s", imageRef)
 	}
 }

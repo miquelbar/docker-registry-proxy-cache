@@ -22,6 +22,7 @@ func SetupRouter() *gin.Engine {
 		panic(err)
 	}
 	store := storage.NewLocalBlobStorage(path + "/tmp/") // TODO:  select depending on the environment (local or S3)
+	//store := storage.NewByPassStorage()
 	v2handler.RegisterV2Routes(r.Group("/v2"), store)
 
 	r.NoRoute(func(c *gin.Context) {

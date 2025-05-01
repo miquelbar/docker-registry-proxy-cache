@@ -19,9 +19,9 @@ func NewLocalBlobStorage(basePath string) *LocalBlobStorage {
 	return &LocalBlobStorage{BasePath: basePath}
 }
 
-func (l *LocalBlobStorage) GetBlobPath(name, reference string) string {
+func (l *LocalBlobStorage) GetBlobPath(imageRef, name, reference string) string {
 	// Construct the path to the manifest file
-	return filepath.Join(l.BasePath, name, "blobs", "rootfs", reference)
+	return filepath.Join(l.BasePath, imageRef, name, "blobs", "rootfs", reference)
 }
 
 func (l *LocalBlobStorage) SaveBlob(ctx context.Context, fullPath string, data io.Reader) error {
@@ -44,8 +44,8 @@ func (l *LocalBlobStorage) SaveBlob(ctx context.Context, fullPath string, data i
 	return nil
 }
 
-func (l *LocalBlobStorage) LoadBlob(ctx context.Context, name, reference string) (io.ReadCloser, error) {
-	fullPath := l.GetBlobPath(name, reference)
+func (l *LocalBlobStorage) LoadBlob(ctx context.Context, imageRef, name, reference string) (io.ReadCloser, error) {
+	fullPath := l.GetBlobPath(imageRef, name, reference)
 	log.Printf("Attempting to load blob: name=%s reference=%s path=%s", name, reference, fullPath)
 
 	file, err := os.Open(fullPath)
@@ -54,7 +54,7 @@ func (l *LocalBlobStorage) LoadBlob(ctx context.Context, name, reference string)
 		return file, nil
 	}
 	log.Printf("Blob not found locally. Attempting download: name=%s reference=%s", name, reference)
-	remoteBlob, err := service.DownloadBlob(name, reference)
+	remoteBlob, err := service.DownloadBlob(imageRef, name, reference)
 	if err != nil {
 		return nil, fmt.Errorf("could not download blob (name=%s, reference=%s): %w", name, reference, err)
 	}
@@ -72,7 +72,7 @@ func (l *LocalBlobStorage) LoadBlob(ctx context.Context, name, reference string)
 	return file, nil
 }
 
-func (l *LocalBlobStorage) GetManifestPath(name, reference string) string {
+func (l *LocalBlobStorage) GetManifestPath(imageRef, name, reference string) string {
 	// Construct the path to the manifest file
 	var lastPath string
 	// TODO: Handle other digest types
@@ -82,12 +82,12 @@ func (l *LocalBlobStorage) GetManifestPath(name, reference string) string {
 		lastPath = filepath.Join(reference + ".json")
 	}
 
-	return filepath.Join(l.BasePath, name, lastPath)
+	return filepath.Join(l.BasePath, imageRef, name, lastPath)
 }
 
-func (l *LocalBlobStorage) StoreManifest(name, reference string, manifest []byte) error {
+func (l *LocalBlobStorage) StoreManifest(imageRef, name, reference string, manifest []byte) error {
 	// Save the manifest to local storage
-	key := l.GetManifestPath(name, reference)
+	key := l.GetManifestPath(imageRef, name, reference)
 	log.Print("Saving manifest to ", key)
 
 	// Create the directory if it doesn't exist
@@ -107,9 +107,9 @@ func (l *LocalBlobStorage) StoreManifest(name, reference string, manifest []byte
 	return nil
 }
 
-func (l *LocalBlobStorage) LoadManifest(name, reference string) ([]byte, error) {
+func (l *LocalBlobStorage) LoadManifest(imageRef, name, reference string) ([]byte, error) {
 	// Save the manifest to local storage
-	key := l.GetManifestPath(name, reference)
+	key := l.GetManifestPath(imageRef, name, reference)
 	log.Print("Loading manifest from ", key)
 
 	var manifest []byte
@@ -117,12 +117,12 @@ func (l *LocalBlobStorage) LoadManifest(name, reference string) ([]byte, error) 
 	file, err := os.Open(key)
 	if err != nil {
 		log.Printf("Manifest for %s/%s not found, downloading manifest...", name, reference)
-		manifest, err = service.DownloadManifest(name, reference)
+		manifest, err = service.DownloadManifest(imageRef, name, reference)
 		if err != nil {
 			return nil, fmt.Errorf("failed to download manifest: %w", err)
 		}
 		// Save the manifest to local storage
-		if err := l.StoreManifest(name, reference, manifest); err != nil {
+		if err := l.StoreManifest(imageRef, name, reference, manifest); err != nil {
 			return nil, fmt.Errorf("failed to store manifest: %w", err)
 		}
 	} else {

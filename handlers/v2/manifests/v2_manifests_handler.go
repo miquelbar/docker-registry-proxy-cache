@@ -22,11 +22,11 @@ func NewManifestHandler(store storage.BlobStorage) *Handler {
 }
 
 // HeadManifest: HEAD /v2/:name/manifests/:reference
-func (h *Handler) V2HeadManifests(c *gin.Context, repo, reference string) {
-	manifest, err := h.Storage.LoadManifest(repo, reference)
+func (h *Handler) V2HeadManifests(c *gin.Context, imageRef, repo, reference string) {
+	manifest, err := h.Storage.LoadManifest(imageRef, repo, reference)
 	if err != nil {
 		log.Printf("Error loading manifest: %v", err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "manifest not found"})
+		c.JSON(http.StatusNotFound, gin.H{"msg": "manifest not found", "error": err.Error()})
 		return
 	}
 
@@ -41,11 +41,11 @@ func (h *Handler) V2HeadManifests(c *gin.Context, repo, reference string) {
 }
 
 // GetManifest: GET /v2/:name/manifests/:reference
-func (h *Handler) V2GetManifest(c *gin.Context, repo, reference string) {
-	manifest, err := h.Storage.LoadManifest(repo, reference)
+func (h *Handler) V2GetManifest(c *gin.Context, imageRef, repo, reference string) {
+	manifest, err := h.Storage.LoadManifest(imageRef, repo, reference)
 	if err != nil {
 		log.Printf("Error loading manifest: %v", err)
-		c.JSON(http.StatusNotFound, gin.H{"error": "manifest not found"})
+		c.JSON(http.StatusNotFound, gin.H{"msg": "manifest not found", "error": err.Error()})
 		return
 	}
 
@@ -57,7 +57,10 @@ func (h *Handler) V2GetManifest(c *gin.Context, repo, reference string) {
 		return
 	}
 
-	c.Header("Content-Type", *mediaType.MediaType)
+	if mediaType.MediaType != nil {
+		log.Printf("Manifest media type: %s", *mediaType.MediaType)
+		c.Header("Content-Type", *mediaType.MediaType)
+	}
 	c.Header("Content-Length", fmt.Sprintf("%d", len(manifest)))
 	c.Header("docker-content-digest", digest)
 	c.Header("docker-distribution-api-version", "registry/2.0")
