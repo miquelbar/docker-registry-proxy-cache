@@ -1,3 +1,5 @@
 /tmp/
 __debug*
 .vscode/
+.DS_Store
+
